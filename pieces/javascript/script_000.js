@@ -1,10 +1,10 @@
 /**
- * {{APP_NAME}}
+ * Test App
  * 
- * @author Ben Scarletti
+ * @author Forename Surname
  * @version 1.0.0
- * @since {{YYYY_MM_DDTHH_mm}}
- * @see {@link https://github.com/scarletti-ben}
+ * @since 2025-08-18T12-37
+ * @see {@link https://github.com/forename-surname}
  * @license MIT
  */
 
@@ -24,7 +24,7 @@
  * Application identifier
  * @type {string}
  */
-const APP_NAME = '{{APP_NAME}}';
+const APP_NAME = 'App Name';
 
 // - ========================
 // - Type Declarations

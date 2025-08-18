@@ -1,3 +1,7 @@
 .venv/
 TODO
 tree.txt
+
+# Ignore all incremental files except _000
+*_[0-9][0-9][0-9]*
+!*_000*

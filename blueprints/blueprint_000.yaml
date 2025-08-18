@@ -1,0 +1,15 @@
+name: 000
+description: testing
+
+default:
+  root:
+    "index.html": "html/index_000.html"
+    "README.md": "markdown/README_000.md"
+    "script.js": "javascript/script_000.js"
+    "style.css": "css/style_000.css"
+
+optional:
+  repository:
+    root:
+      ".gitignore": "ignore/.gitignore_000"
+      "LICENSE": "license/LICENSE_000.md"
