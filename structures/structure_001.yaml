@@ -1,0 +1,15 @@
+name: 001
+description: testing
+
+default:
+  root:
+    "index.html": "html/index_001.html"
+    "README.md": "readme/README_001.md"
+    "script.js": "javascript/script_001.js"
+    "style.css": "css/style_001.css"
+
+optional:
+  repository:
+    root:
+      ".gitignore": "ignore/.gitignore_001"
+      "LICENSE": "license/LICENSE_001.md"

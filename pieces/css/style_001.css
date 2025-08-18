@@ -1,0 +1,119 @@
+/* * ======================================================
+* Global Styling
+* ====================================================== */
+
+/* < ========================
+< Root Variables
+< ======================== */
+
+:root {
+  --surface: hsl(0, 0%, 20%);
+  --surface-lighter: hsl(0, 0%, 40%);
+  --surface-darker: hsl(0, 0%, 0%);
+  --foreground: hsl(0, 0%, 70%);
+  --foreground-lighter: hsl(0, 0%, 100%);
+  --foreground-darker: hsl(0, 0%, 40%);
+  --accent: hsl(180, 100%, 45%);
+  --accent-lighter: hsl(180, 100%, 65%);
+  --accent-darker: hsl(180, 100%, 25%);
+  --scrollbar: hsl(212, 10%, 37%) transparent;
+  --font-family: 'Segoe UI', sans-serif;
+  --font-size: 16px;
+  --line-height: 1.5;
+}
+
+/* < ========================
+< Theme: Ocean
+< ======================== */
+
+[data-theme="ocean"] {
+  --surface: hsl(210, 88%, 8%);
+  --surface-lighter: hsl(210, 73%, 35%);
+  --surface-darker: hsl(210, 93%, 12%);
+  --foreground: hsl(210, 31%, 41%);
+  --foreground-lighter: hsl(210, 78%, 70%);
+  --foreground-darker: hsl(210, 88%, 19%);
+  --accent: hsl(30, 100%, 55%);
+  --accent-lighter: hsl(30, 100%, 75%);
+  --accent-darker: hsl(30, 100%, 35%);
+}
+
+/* < ========================
+< HTML and Body Styling
+< ======================== */
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  display: block;
+  overflow: auto;
+  position: relative;
+  box-sizing: border-box;
+  background: rgb(42, 42, 42);
+  color: var(--foreground);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  scrollbar-color: var(--scrollbar);
+}
+
+/* < ========================
+< Wildcard Styling
+< ======================== */
+
+* {
+  box-sizing: border-box;
+  /* box-shadow: 0 0 0 1px purple; */
+}
+
+/* < ========================
+< Utility Classes
+< ======================== */
+
+.hidden {
+  display: none !important;
+}
+
+/* < ========================
+< Page Element Styling
+< ======================== */
+
+#page {
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  margin: 0px;
+  padding: 0px;
+  background: transparent;
+}
+
+/* < ========================
+< Main Element Styling
+< ======================== */
+
+#main {
+  width: 85%;
+  min-width: 300px;
+  max-width: 85%;
+  height: 85%;
+  min-height: 300px;
+  max-height: 85%;
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  display: block;
+  overflow: auto;
+  resize: both;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+}
+
+/* * ======================================================
+* Project Styling
+* ====================================================== */
