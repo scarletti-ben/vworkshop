@@ -1,4 +1,4 @@
-name: 000
+name: testing
 description: testing
 
 default:
@@ -12,4 +12,4 @@ optional:
   repository:
     root:
       ".gitignore": "ignore/.gitignore_000"
-      "LICENSE": "license/LICENSE_000.md"
+      "LICENSE": "license/LICENSE_000"

@@ -20,8 +20,12 @@ from typing import (
 # - =========================
 
 import sys
+import traceback
 import yaml
-from argparse import ArgumentParser
+from argparse import (
+    ArgumentParser, 
+    Namespace
+)
 from pathlib import Path
 
 # < =======================================================
@@ -32,8 +36,9 @@ from pathlib import Path
 # - Constants
 # - =========================
 
-BLUEPRINTS_DIR: Path = Path("blueprints")
-PIECES_DIR: Path = Path("pieces")
+LOCAL: Path = Path(__file__).parent
+BLUEPRINTS: Path = LOCAL / "blueprints"
+PIECES: Path = LOCAL / "pieces"
 
 # - =========================
 # - Classes
@@ -48,17 +53,49 @@ class Blueprint:
     default: Dict[str, Any]
     optional: Optional[Dict[str, Any]] = None
 
+    def preview(self, indent: int = 0) -> None:
+        """Print a tree-style preview of the blueprint"""
+
+        prefix: str = " " * indent
+
+        def walk(d: dict, prefix: str = "") -> None:
+            """Recursively print tree structure"""
+            for i, (key, val) in enumerate(d.items()):
+                connector = "└── " if i == len(d) - 1 else "├── "
+                print(prefix + connector + key)
+                if isinstance(val, dict):
+                    extension = "    " if i == len(d) - 1 else "│   "
+                    walk(val, prefix + extension)
+
+        print(prefix + "Default:")
+        walk(self.default, prefix + "  ")
+        if self.optional:
+            print(prefix + "Optional:")
+            walk(self.optional, prefix + "  ")
+
 # - =========================
 # - Functions
 # - =========================
 
-def load_blueprint(blueprint_name: str) -> Blueprint:
-    """Load YAML file to Blueprint instance"""
+def confirmation(message: str) -> bool:
+    """Prompt user for yes / no input"""
 
-    blueprint_path: Path = BLUEPRINTS_DIR / f"blueprint_{blueprint_name}.yaml"
+    while True:
+        response = input(f"{message} (y/n): ").lower().strip()
+        if response in ('y', 'yes'):
+            return True
+        elif response in ('n', 'no'):
+            return False
+        else:
+            print("Please enter 'y' or 'n'")
+
+def load_blueprint(code: str) -> Blueprint:
+    """Create a Blueprint instance from YAML"""
+
+    blueprint_path: Path = BLUEPRINTS / f"blueprint_{code}.yaml"
 
     if not blueprint_path.exists():
-        print(f"Error: Blueprint '{blueprint_name}' not found at {blueprint_path}")
+        print(f"Error: Blueprint '{code}' not found at {blueprint_path}")
         sys.exit(1)
     
     with open(blueprint_path, 'r') as f:
@@ -73,8 +110,7 @@ def load_blueprint(blueprint_name: str) -> Blueprint:
 
 def create_files_from_blueprint(
         blueprint: Dict[str, Any], 
-        base_path: Path, 
-        pieces_dir: Path
+        base_path: Path
     ) -> None:
     """Recursively create files from blueprint dictionary"""
 
@@ -83,10 +119,10 @@ def create_files_from_blueprint(
             # Handle directory
             dir_path = base_path / name
             dir_path.mkdir(exist_ok = True)
-            create_files_from_blueprint(source, dir_path, pieces_dir)
+            create_files_from_blueprint(source, dir_path)
         else:
             # Handle file
-            source_path = pieces_dir / source
+            source_path = PIECES / source
             target_path = base_path / name
             
             if not source_path.exists():
@@ -103,74 +139,69 @@ def create_files_from_blueprint(
 
             except Exception as e:
                 print(f"Error creating {target_path}: {e}")
-
-def confirmation(message: str) -> bool:
-    """Prompt user for yes / no input"""
-
-    while True:
-        response = input(f"{message} (y/n): ").lower().strip()
-        if response in ('y', 'yes'):
-            return True
-        elif response in ('n', 'no'):
-            return False
-        else:
-            print("Please enter 'y' or 'n'")
+                traceback.print_exc()
 
 def create_template(
-        blueprint_name: str, 
-        enabled_options: list[str], 
-        target_dir: Optional[str] = None
+        code: str, 
+        target_dir: Optional[str] = None,
+        repository: bool = False,
+        skipping: bool = False
     ) -> None:
     """Create template from a YAML blueprint"""
 
-    blueprint = load_blueprint(blueprint_name)
+    blueprint = load_blueprint(code)
     
-    print(f"Creating template: {blueprint.name}")
+    print(f"Template: {blueprint.name}")
     print(f"Description: {blueprint.description}")
+    # print(f"Preview: ")
+    # blueprint.preview(2)
     
     # Determine target directory
     if target_dir is None:
-        target_dir = input(f"Enter target directory name (default: {blueprint.name}): ").strip()
-        if not target_dir:
+        if skipping:
             target_dir = blueprint.name
+        else:
+            target_dir = input(f"Enter target directory name (default: {blueprint.name}): ").strip()
+            if target_dir == '':
+                target_dir = blueprint.name
     
     target_path = Path(target_dir)
-    pieces_dir = Path("pieces")
     
-    if target_path.exists():
+    if target_path.exists() and not skipping:
         if not confirmation(f"Directory '{target_dir}' exists. Continue?"):
             print("Cancelled")
             return
     
     target_path.mkdir(exist_ok = True)
-    print(f"Target directory: {target_path.absolute()}")
+    # print(f"Target directory: {target_path.absolute()}")
     
     # Create default files
     print("\nCreating default files...")
-    for section_name, blueprint in blueprint.default.items():
+    for section_name, section_dict in blueprint.default.items():
         base_path = target_path if section_name == 'root' else target_path / section_name
-        create_files_from_blueprint(blueprint, base_path, pieces_dir)
+        create_files_from_blueprint(section_dict, base_path)
     
     # Handle optional files
-    if blueprint.optional:
+    if blueprint.optional: 
         print("\nProcessing optional files...")
+
         for option_name, option_data in blueprint.optional.items():
             should_include = False
-            
-            # Check if option was passed as argument
-            if f"-{option_name}" in enabled_options:
+
+            if skipping:
                 should_include = True
-                print(f"Including optional section: {option_name}")
+            elif option_name == "repository" and repository:
+                should_include = True
             else:
-                # Ask user
                 should_include = confirmation(f"Include optional section '{option_name}'?")
             
             if should_include:
-                for section_name, blueprint in option_data.items():
+                print(f"Including optional section: {option_name}")
+                for section_name, section_dict in option_data.items():
                     base_path = target_path if section_name == 'root' else target_path / section_name
-                    create_files_from_blueprint(blueprint, base_path, pieces_dir)
+                    create_files_from_blueprint(section_dict, base_path)
     
-    print(f"\nTemplate '{blueprint.name}' created successfully in '{target_dir}'!")
+    print(f"\nTemplate created at '/{target_dir}'")
 
 # ~ =======================================================
 # ~ Entry Point
@@ -179,44 +210,66 @@ def create_template(
 def main() -> None:
     """Entry point function for vworkshop"""
 
-    # ? Note: Description is shown for python main.py -h
+    # ~ =========================
+    # ~ Argument Setup
+    # ~ =========================
 
+    # Create an ArgumentParser instance and add help text for -h
     parser = ArgumentParser(
+        prog = "vworkshop",
         description = "Create template folders from YAML blueprints"
     )
 
+    # Add required positonal argument 'blueprint'
     parser.add_argument(
-        "blueprint", 
-        help = "Blueprint name (e.g., '001')"
+        "blueprint",
+        help = "Blueprint code (e.g., '001')"
     )
+
+    # Add optional positonal argument 'target'
     parser.add_argument(
-        "target", 
-        nargs = "?", 
+        "target",
+        nargs = "?",
         help = "Target directory name (optional)"
     )
 
-    # parser.add_argument("-r", "--repository", action = "store_true")
+    # Add optional flag '--skip'
+    parser.add_argument(
+        "-s", "--skip",
+        action = "store_true",
+        help = "skip all confirmations"
+    )
 
-    # Parse known arguments to handle optional flags like -repository
-    args, unknown = parser.parse_known_args()
-    
-    # Extract optional flags
-    enabled_options = [arg for arg in unknown if arg.startswith('-')]
-    
-    if not args.blueprint:
-        print("Error: Blueprint name is required")
-        print("Usage: vworkshop <blueprint_name> [target_dir] [-option1] [-option2]")
-        sys.exit(1)
-    
+    # Add optional flag '--repository'
+    parser.add_argument(
+        "-r", "--repository",
+        action = "store_true",
+        help = "include repository files"
+    )
+
+    # ~ =========================
+    # ~ Argument Parsing
+    # ~ =========================
+
+    # Parse known arguments, raise an error for unknown arguments
+    args: Namespace = parser.parse_args()
+
+    # > =========================
+    # > Execution
+    # > =========================
+
+    print('\n' * 4)
+
     try:
-        create_template(args.blueprint, enabled_options, args.target)
+        create_template(args.blueprint, args.target, args.repository, args.skip)
 
     except KeyboardInterrupt:
         print("\nCancelled by user")
-        sys.exit(130)
+        sys.exit(0)
 
     except Exception as e:
         print(f"Error: {e}")
+        traceback.print_exc()
         sys.exit(1)
 
 # > =======================================================
