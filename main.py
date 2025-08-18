@@ -223,7 +223,7 @@ def main() -> None:
     # Add required positonal argument 'blueprint'
     parser.add_argument(
         "blueprint",
-        help = "Blueprint code (e.g., '001')"
+        help = "Blueprint code ('001' => 'blueprint_001.yaml)"
     )
 
     # Add optional positonal argument 'target'
