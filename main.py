@@ -20,6 +20,7 @@ from typing import (
 # - =========================
 
 import sys
+import subprocess
 import traceback
 import yaml
 from argparse import (
@@ -89,6 +90,11 @@ def confirmation(message: str) -> bool:
         else:
             print("Please enter 'y' or 'n'")
 
+def open_vscode() -> None:
+    """Open VSCode to the vworkshop directory"""
+    directory_path: Path = LOCAL
+    subprocess.run(["code.cmd", directory_path])
+
 def load_blueprint(code: str) -> Blueprint:
     """Create a Blueprint instance from YAML"""
 
@@ -133,8 +139,10 @@ def create_files_from_blueprint(
             target_path.parent.mkdir(parents = True, exist_ok = True)
             
             try:
-                content = source_path.read_text(encoding = 'utf-8')
-                target_path.write_text(content, encoding = 'utf-8')
+                # content = source_path.read_text(encoding = 'utf-8')
+                # target_path.write_text(content, encoding = 'utf-8')
+                content = source_path.read_bytes()
+                target_path.write_bytes(content) 
                 print(f"Created: {target_path}")
 
             except Exception as e:
@@ -220,17 +228,19 @@ def main() -> None:
         description = "Create template folders from YAML blueprints"
     )
 
-    # Add required positonal argument 'blueprint'
+    # Add optional positonal argument 'blueprint', with default
     parser.add_argument(
         "blueprint",
-        help = "Blueprint code ('001' => 'blueprint_001.yaml)"
+        nargs = "?",
+        default = None,
+        help = "Blueprint code [optional] ('001' => 'blueprint_001.yaml)"
     )
 
     # Add optional positonal argument 'target'
     parser.add_argument(
         "target",
         nargs = "?",
-        help = "Target directory name (optional)"
+        help = "Target directory name [optional]"
     )
 
     # Add optional flag '--skip'
@@ -247,12 +257,46 @@ def main() -> None:
         help = "include repository files"
     )
 
+    # ! =========================
+    # ! Experimental Flags
+    # ! =========================
+
+    # Add experimental flag '--code'
+    parser.add_argument(
+        "-vs", "--code",
+        action = "store_true",
+        help = "open VSCode"
+    )
+
+    # Add experimental flag '--favourite'
+    parser.add_argument(
+        "-f", "--favourite",
+        action = "store_true",
+        help = "generate favourite"
+    )
+
     # ~ =========================
     # ~ Argument Parsing
     # ~ =========================
 
     # Parse known arguments, raise an error for unknown arguments
     args: Namespace = parser.parse_args()
+
+    # - =========================
+    # - Argument Checking
+    # - =========================
+
+    if args.code:
+        open_vscode()
+        sys.exit(0)
+
+    if args.favourite:
+        create_template('002', 'favourite', False, True)
+        sys.exit(0)
+
+    if args.blueprint is None:
+        print("\nBlueprint is None")
+        sys.exit(0)
 
     # > =========================
     # > Execution
